@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ post.post_title }}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/one_post.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/comment_form.css' %}">
+</head>
+<body>
+    <header>
+        <h1>{{ post.post_title }}</h1>
+    </header>
+    <main>
+        <article class="post">
+            <div class="post-meta">
+                <img src="{% static 'images/user.png' %}" alt="User Avatar" class="user-avatar">
+                <div class="author-info">
+                    <p class="post-author">{{ post.post_author }}</p>
+                    <p class="post-date">Published: {{ post.post_publish_date|date:"F d, Y H:i" }}</p>
+                </div>
+            </div>
+            <div class="post-content">
+                {{ post.post_body|safe }}
+            </div>
+            <div class="new-comment-button">
+                <button id="new-comment-toggle">New Comment</button>
+            </div>
+            <form method="post" action="{% url 'one_post' post_id=post.post_id %}" class="comment-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ comment_form.name.label_tag }}
+                    {{ comment_form.name }}
+                </div>
+                <div class="form-group">
+                    {{ comment_form.email.label_tag }}
+                    {{ comment_form.email }}
+                </div>
+                <div class="form-group">
+                    {{ comment_form.body.label_tag }}
+                    {{ comment_form.body }}
+                </div>
+                <button type="submit" class="btn-submit">Submit</button>
+                <button type="button" id="cancel-comment" class="btn-cancel">Cancel</button>
+            </form>
+            <div id="comment-error" style="color: red; display: none;"></div>
+        </article>
+
+        <h2 class="comments-heading">Comments</h2>
+        <div class="comments">
+
+            {% for comment in comments %}
+                <div class="comment">
+                    <div class="comment-meta">
+                        <!-- Add comment author info here -->
+                        <p class="comment-author">{{ comment.name }}</p>
+                        <p class="comment-date">Posted: {{ comment.created|date:"F d, Y H:i" }}</p>
+                    </div>
+                    <div class="comment-content">
+                        {{ comment.censored_comment_text|safe }}
+                    </div>
+                </div>
+            {% empty %}
+                <p>No comments yet.</p>
+            {% endfor %}
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const newCommentToggle = document.getElementById("new-comment-toggle");
+            const commentForm = document.querySelector(".comment-form");
+            const cancelComment = document.getElementById("cancel-comment");
+            const errorDiv = document.getElementById("comment-error");
+
+            newCommentToggle.addEventListener("click", function() {
+                if (commentForm.style.display === "none" || commentForm.style.display === "") {
+                    commentForm.style.display = "block";
+                    errorDiv.style.display = "none";
+                } else {
+                    commentForm.style.display = "none";
+                }
+            });
+
+            cancelComment.addEventListener("click", function() {
+                commentForm.style.display = "none";
+                errorDiv.style.display = "none";
+            });
+
+            commentForm.addEventListener("submit", function(e) {
+                e.preventDefault();
+                const formData = new FormData(commentForm);
+
+                fetch(commentForm.getAttribute("action"), {
+                    method: "POST",
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        errorDiv.innerText = data.error;
+                        errorDiv.style.display = "block";
+                    } else {
+                        commentForm.reset();
+                        commentForm.style.display = "none";
+                        errorDiv.style.display = "none";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ post.post_title }}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/pagination.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Blog Posts</h1>
+    </header>
+    <main>
+        <div class="post-feed">
+            {% for post in posts %}
+                <div class="post-item">
+                    <div class="post-header">
+                        <img src="{% static 'images/user.png' %}" alt="User Avatar" class="user-avatar">
+                        <div class="post-info">
+                            <h2><a href="{% url 'one_post' post_id=post.post_id %}">{{ post.post_title }}</a></h2>
+                            <p class="post-meta">Author: {{ post.post_author }}</p>
+                            <div class="post-date">
+                                {{ post.post_publish_date|date:"F d, Y" }} at {{ post.post_publish_date|time:"H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        <p>{{ post.post_body|truncatewords:5 }}{% if post.post_body|length > 5 %}...{% endif %}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="pagination">
+            <span class="step-links">
+                {% if posts.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ posts.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current-page">{{ posts.number }} of {{ posts.paginator.num_pages }}</span>
+
+                {% if posts.has_next %}
+                    <a href="?page={{ posts.next_page_number }}">next</a>
+                    <a href="?page={{ posts.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </main>
+</body>
+</html>
